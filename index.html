@@ -299,828 +299,107 @@ let isCodeModified = false;
 document.addEventListener('contextmenu', e => e.preventDefault());
 
 // ===== QUESTIONS DATA =====
-const QUESTIONS = [
-  {
-    id: 1,
-    title: "Binary Search Breach",
-    difficulty: "EASY",
-    points: 100,
-    category: "Arrays",
-    description: "The infiltration script is failing. Your binary search function enters an infinite loop and never terminates. The target value exists in the array but the algorithm can't locate it. Identify and neutralize the bugs to restore functionality.",
-    constraints: ["1 ≤ arr.length ≤ 10⁵", "Array is sorted ascending", "All elements are distinct"],
-    examples: [
-      { input: "arr=[1,3,5,7,9], target=5", output: "2 (index)" },
-      { input: "arr=[2,4,6,8,10], target=2", output: "0 (index)" },
-      { input: "arr=[1,2,3,4,5], target=9", output: "-1 (not found)" }
-    ],
-    hints: [
-      "Check the initial value of 'right' — should it be length or length-1?",
-      "When moving left pointer, should it be mid or mid+1?",
-      "The while condition is also wrong — think about when left equals right"
-    ],
-    buggyCode: {
-      javascript: `function binarySearch(arr, target) {
-  let left = 0;
-  let right = arr.length; // BUG 1
-  
-  while (left < right) { // BUG 2
-    let mid = Math.floor((left + right) / 2);
-    
-    if (arr[mid] === target) {
-      return mid;
-    } else if (arr[mid] < target) {
-      left = mid; // BUG 3
-    } else {
-      right = mid - 1;
-    }
-  }
-  
-  return -1;
-}`,
-      python: `def binary_search(arr, target):
-    left = 0
-    right = len(arr)  # BUG 1
-    
-    while left < right:  # BUG 2
-        mid = (left + right) // 2
-        
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid  # BUG 3
-        else:
-            right = mid - 1
-    
-    return -1`,
-      cpp: `int binarySearch(vector<int>& arr, int target) {
-    int left = 0;
-    int right = arr.size(); // BUG 1
-    
-    while (left < right) { // BUG 2
-        int mid = left + (right - left) / 2;
-        
-        if (arr[mid] == target) return mid;
-        else if (arr[mid] < target) left = mid; // BUG 3
-        else right = mid - 1;
-    }
-    return -1;
-}`
-    },
-    testCode: {
-      javascript: `
-let passed = 0, failed = 0, errors = [];
-function test(i1, i2, expected, label) {
-  try {
-    const result = binarySearch(i1, i2);
-    if (result === expected) { passed++; }
-    else { failed++; errors.push(\`❌ \${label}: got \${result}, expected \${expected}\`); }
-  } catch(e) { failed++; errors.push(\`💥 \${label}: RUNTIME ERROR - \${e.message}\`); }
-}
-test([1,3,5,7,9], 5, 2, "Test 1");
-test([2,4,6,8,10], 2, 0, "Test 2");
-test([1,2,3,4,5], 9, -1, "Test 3");
-test([7], 7, 0, "Test 4");
-test([1,2,3,4,5,6,7,8,9,10], 10, 9, "Test 5");
-if (failed === 0) { console.log("ALL_PASS:5/5 test cases passed"); }
-else { errors.forEach(e => console.log(e)); console.log(\`PARTIAL:\${passed}/\${passed+failed} test cases passed\`); }`,
-      python: `
-
-def run_tests():
-    cases = [
-        ([1,3,5,7,9], 5, 2, "Test 1"),
-        ([2,4,6,8,10], 2, 0, "Test 2"),
-        ([1,2,3,4,5], 9, -1, "Test 3"),
-        ([7], 7, 0, "Test 4"),
-        ([1,2,3,4,5,6,7,8,9,10], 10, 9, "Test 5"),
-    ]
-    passed = 0; failed = 0
-    for arr, target, expected, label in cases:
-        try:
-            result = binary_search(list(arr), target)
-            if result == expected: passed += 1
-            else: failed += 1; print(f"\u274c {label}: got {result}, expected {expected}")
-        except Exception as e: failed += 1; print(f"\U0001f4a5 {label}: RUNTIME ERROR - {e}")
-    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
-    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
-run_tests()`,
-      cpp: `
-
-int main() {
-    auto test = [](vector<int> arr, int target, int expected, string label) -> bool {
-        int result = binarySearch(arr, target);
-        if (result == expected) return true;
-        cout << "\u274c " << label << ": got " << result << ", expected " << expected << "\n";
-        return false;
-    };
-    int passed = 0, total = 5;
-    passed += test({1,3,5,7,9}, 5, 2, "Test 1");
-    passed += test({2,4,6,8,10}, 2, 0, "Test 2");
-    passed += test({1,2,3,4,5}, 9, -1, "Test 3");
-    passed += test({7}, 7, 0, "Test 4");
-    passed += test({1,2,3,4,5,6,7,8,9,10}, 10, 9, "Test 5");
-    if (passed == total) cout << "ALL_PASS:" << total << "/" << total << " test cases passed\n";
-    else cout << "PARTIAL:" << passed << "/" << total << " test cases passed\n";
-    return 0;
-}`
-    },
-
-    testCases: [
-      { label:'Test 1', input:[[1,3,5,7,9],5],   expected:'2',  wrongOutput:'-1' },
-      { label:'Test 2', input:[[2,4,6,8,10],2],  expected:'0',  wrongOutput:'-1' },
-      { label:'Test 3', input:[[1,2,3,4,5],9],   expected:'-1', wrongOutput:'undefined' },
-      { label:'Test 4', input:[[7],7],            expected:'0',  wrongOutput:'-1' },
-      { label:'Test 5', input:[[1,2,3,4,5,6,7,8,9,10],10], expected:'9', wrongOutput:'-1' },
-    ],
-    validator: `function binarySearch(arr,target){let l=0,r=arr.length-1;while(l<=r){let m=Math.floor((l+r)/2);if(arr[m]===target)return m;else if(arr[m]<target)l=m+1;else r=m-1;}return -1;}`,
-    validatorRunner: `
-      const cases=[[[1,3,5,7,9],5,2],[[2,4,6,8,10],2,0],[[1,2,3,4,5],9,-1],[[7],7,0],[[1,2,3,4,5,6,7,8,9,10],10,9]];
-      let p=0,f=0;
-      cases.forEach(([arr,t,exp],i)=>{const r=binarySearch([...arr],t);if(r===exp)p++;else{f++;console.log('❌ Test '+(i+1)+': got '+r+', expected '+exp);}});
-      if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-      else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');
-    `,
-    fixChecks: {
-      python: [
-        { pattern: /right\s*=\s*len\s*\(\s*arr\s*\)\s*-\s*1/, description: 'Fix BUG 1: right = len(arr) - 1' },
-        { pattern: /while\s+left\s*<=\s*right/, description: 'Fix BUG 2: while left <= right' },
-        { pattern: /left\s*=\s*mid\s*\+\s*1/, description: 'Fix BUG 3: left = mid + 1' },
-      ],
-      cpp: [
-        { pattern: /right\s*=\s*arr\s*\.\s*size\s*\(\s*\)\s*-\s*1/, description: 'Fix BUG 1: right = arr.size() - 1' },
-        { pattern: /while\s*\(\s*left\s*<=\s*right\s*\)/, description: 'Fix BUG 2: while (left <= right)' },
-        { pattern: /left\s*=\s*mid\s*\+\s*1/, description: 'Fix BUG 3: left = mid + 1' },
-      ],
-    },
-    solvedBy: false
-  },
-  {
-    id: 2,
-    title: "Palindrome Protocol",
-    difficulty: "EASY",
-    points: 100,
-    category: "Strings",
-    description: "The authentication system uses palindrome verification to validate access tokens. The function is reporting false negatives — valid palindromes are being rejected. The character comparison logic has been corrupted. Fix the decryption protocol.",
-    constraints: ["1 ≤ s.length ≤ 10⁴", "String contains only lowercase letters", "Empty string is a palindrome"],
-    examples: [
-      { input: `s="racecar"`, output: "true" },
-      { input: `s="hello"`, output: "false" },
-      { input: `s="abcba"`, output: "true" }
-    ],
-    hints: [
-      "Look at the loop termination condition — does it cover all characters?",
-      "The comparison indices might be targeting wrong positions",
-      "Consider what happens at the exact middle of an odd-length string"
-    ],
-    buggyCode: {
-      javascript: `function isPalindrome(s) {
-  let left = 0;
-  let right = s.length; // BUG 1
-  
-  while (left < right) {
-    if (s[left] !== s[right]) { // BUG 2
-      return false;
-    }
-    left++;
-    right--; // BUG 3 (missing update makes it skip)
-  }
-  
-  return true;
-}`,
-      python: `def is_palindrome(s):
-    left = 0
-    right = len(s)  # BUG 1
-    
-    while left < right:
-        if s[left] != s[right]:  # BUG 2
-            return False
-        left += 1
-        right -= 1
-    
-    return True`,
-      cpp: `bool isPalindrome(string s) {
-    int left = 0;
-    int right = s.length(); // BUG 1
-    
-    while (left < right) {
-        if (s[left] != s[right]) // BUG 2
-            return false;
-        left++;
-        right--;
-    }
-    return true;
-}`
-    },
-    testCode: {
-      javascript: `
-let passed = 0, failed = 0, errors = [];
-function testP(input, expected, label) {
-  try {
-    const result = isPalindrome(input);
-    if (result === expected) { passed++; }
-    else { failed++; errors.push(\`❌ \${label}: got \${result}, expected \${expected}\`); }
-  } catch(e) { failed++; errors.push(\`💥 \${label}: RUNTIME ERROR - \${e.message}\`); }
-}
-testP("racecar", true, "Test 1"); testP("hello", false, "Test 2");
-testP("abcba", true, "Test 3"); testP("a", true, "Test 4");
-testP("ab", false, "Test 5"); testP("aabbaa", true, "Test 6");
-if (failed === 0) { console.log("ALL_PASS:6/6 test cases passed"); }
-else { errors.forEach(e => console.log(e)); console.log(\`PARTIAL:\${passed}/\${passed+failed} test cases passed\`); }`,
-      python: `
-
-def run_tests():
-    cases = [("racecar",True,"T1"),("hello",False,"T2"),("abcba",True,"T3"),("a",True,"T4"),("ab",False,"T5"),("aabbaa",True,"T6")]
-    passed = 0; failed = 0
-    for s, expected, label in cases:
-        try:
-            result = is_palindrome(s)
-            if result == expected: passed += 1
-            else: failed += 1; print(f"\u274c {label}: got {result}, expected {expected}")
-        except Exception as e: failed += 1; print(f"\U0001f4a5 {label}: {e}")
-    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
-    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
-run_tests()`,
-      cpp: `
-
-int main() {
-    auto test = [](string s, bool expected, string label) -> bool {
-        bool result = isPalindrome(s);
-        if (result == expected) return true;
-        cout << "\u274c " << label << ": got " << result << ", expected " << expected << "\n";
-        return false;
-    };
-    int passed = 0, total = 6;
-    passed += test("racecar", true, "T1"); passed += test("hello", false, "T2");
-    passed += test("abcba", true, "T3"); passed += test("a", true, "T4");
-    passed += test("ab", false, "T5"); passed += test("aabbaa", true, "T6");
-    if (passed == total) cout << "ALL_PASS:" << total << "/" << total << " test cases passed\n";
-    else cout << "PARTIAL:" << passed << "/" << total << " test cases passed\n";
-    return 0;
-}`
-    },
-
-    testCases: [
-      { label:'Test 1', input:['racecar'], expected:'true',  wrongOutput:'false' },
-      { label:'Test 2', input:['hello'],   expected:'false', wrongOutput:'true'  },
-      { label:'Test 3', input:['abcba'],   expected:'true',  wrongOutput:'false' },
-      { label:'Test 4', input:['a'],       expected:'true',  wrongOutput:'false' },
-      { label:'Test 5', input:['ab'],      expected:'false', wrongOutput:'true'  },
-      { label:'Test 6', input:['aabbaa'],  expected:'true',  wrongOutput:'false' },
-    ],
-    validator: `function isPalindrome(s){let l=0,r=s.length-1;while(l<r){if(s[l]!==s[r])return false;l++;r--;}return true;}`,
-    validatorRunner: `
-      const cases=[['racecar',true],['hello',false],['abcba',true],['a',true],['ab',false],['aabbaa',true]];
-      let p=0,f=0;
-      cases.forEach(([s,exp],i)=>{const r=isPalindrome(s);if(r===exp)p++;else{f++;console.log('❌ Test '+(i+1)+': got '+r+', expected '+exp);}});
-      if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-      else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');
-    `,
-    fixChecks: {
-      python: [
-        { pattern: /right\s*=\s*len\s*\(\s*s\s*\)\s*-\s*1/, description: 'Fix BUG 1: right = len(s) - 1' },
-        { pattern: /s\s*\[\s*left\s*\]\s*!=\s*s\s*\[\s*right\s*\]/, description: 'Fix BUG 2: s[left] != s[right]' },
-      ],
-      cpp: [
-        { pattern: /right\s*=\s*s\s*\.\s*(length|size)\s*\(\s*\)\s*-\s*1/, description: 'Fix BUG 1: right = s.length() - 1' },
-        { pattern: /s\s*\[\s*left\s*\]\s*!=\s*s\s*\[\s*right\s*\]/, description: 'Fix BUG 2: s[left] != s[right]' },
-      ],
-    },
-    solvedBy: false
-  },
-  {
-    id: 3,
-    title: "Bubble Sort Backdoor",
-    difficulty: "MEDIUM",
-    points: 200,
-    category: "Sorting",
-    description: "Data packets are arriving unsorted, causing the firewall to malfunction. The sort algorithm has three critical bugs injected by a saboteur. The array is being processed incorrectly — some elements refuse to swap and others are duplicated. Restore the sorting algorithm.",
-    constraints: ["1 ≤ arr.length ≤ 10⁴", "Elements can be negative", "Must sort in ascending order"],
-    examples: [
-      { input: "arr=[64,34,25,12,22,11,90]", output: "[11,12,22,25,34,64,90]" },
-      { input: "arr=[5,1,4,2,8]", output: "[1,2,4,5,8]" },
-      { input: "arr=[-3,1,-1,2,0]", output: "[-3,-1,0,1,2]" }
-    ],
-    hints: [
-      "The outer loop bound is off — check if 'n' should be 'n-1'",
-      "The inner loop bound doesn't account for already-sorted elements",
-      "The swap logic might have a wrong comparison operator"
-    ],
-    buggyCode: {
-      javascript: `function bubbleSort(arr) {
-  const n = arr.length;
-  
-  for (let i = 0; i < n; i++) { // BUG 1
-    for (let j = 0; j < n; j++) { // BUG 2
-      if (arr[j] > arr[j + 1]) { // BUG 3 (boundary)
-        let temp = arr[j];
-        arr[j] = arr[j + 1];
-        arr[j + 1] = temp;
-      }
-    }
-  }
-  
-  return arr;
-}`,
-      python: `def bubble_sort(arr):
-    n = len(arr)
-    
-    for i in range(n):  # BUG 1
-        for j in range(n):  # BUG 2
-            if arr[j] > arr[j + 1]:  # BUG 3 (boundary)
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-    
-    return arr`,
-      cpp: `vector<int> bubbleSort(vector<int> arr) {
-    int n = arr.size();
-    
-    for (int i = 0; i < n; i++) { // BUG 1
-        for (int j = 0; j < n; j++) { // BUG 2
-            if (arr[j] > arr[j + 1]) { // BUG 3
-                swap(arr[j], arr[j + 1]);
-            }
-        }
-    }
-    return arr;
-}`
-    },
-    testCode: {
-      javascript: `
-function arrEq(a, b) { return a.length===b.length && a.every((v,i)=>v===b[i]); }
-let passed = 0, failed = 0, errors = [];
-function testB(input, expected, label) {
-  try {
-    const result = bubbleSort([...input]);
-    if (arrEq(result, expected)) { passed++; }
-    else { failed++; errors.push(\`❌ \${label}: got [\${result}], expected [\${expected}]\`); }
-  } catch(e) { failed++; errors.push(\`💥 \${label}: RUNTIME ERROR - \${e.message}\`); }
-}
-testB([64,34,25,12,22,11,90],[11,12,22,25,34,64,90],"T1");
-testB([5,1,4,2,8],[1,2,4,5,8],"T2");
-testB([-3,1,-1,2,0],[-3,-1,0,1,2],"T3");
-testB([1],[1],"T4"); testB([3,3,1,1],[1,1,3,3],"T5");
-if (failed === 0) { console.log("ALL_PASS:5/5 test cases passed"); }
-else { errors.forEach(e => console.log(e)); console.log(\`PARTIAL:\${passed}/\${passed+failed} test cases passed\`); }`,
-      python: `
-
-def run_tests():
-    cases = [
-        ([64,34,25,12,22,11,90],[11,12,22,25,34,64,90],"T1"),
-        ([5,1,4,2,8],[1,2,4,5,8],"T2"),
-        ([-3,1,-1,2,0],[-3,-1,0,1,2],"T3"),
-        ([1],[1],"T4"),
-        ([3,3,1,1],[1,1,3,3],"T5"),
-    ]
-    passed = 0; failed = 0
-    for inp, expected, label in cases:
-        try:
-            result = bubble_sort(list(inp))
-            if result == expected: passed += 1
-            else: failed += 1; print(f"\u274c {label}: got {result}, expected {expected}")
-        except Exception as e: failed += 1; print(f"\U0001f4a5 {label}: {e}")
-    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
-    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
-run_tests()`,
-      cpp: `
-
-int main() {
-    auto test = [](vector<int> arr, vector<int> expected, string label) -> bool {
-        vector<int> result = bubbleSort(arr);
-        if (result == expected) return true;
-        cout << "\u274c " << label << ": wrong output\n";
-        return false;
-    };
-    int passed = 0, total = 5;
-    passed += test({64,34,25,12,22,11,90},{11,12,22,25,34,64,90},"T1");
-    passed += test({5,1,4,2,8},{1,2,4,5,8},"T2");
-    passed += test({-3,1,-1,2,0},{-3,-1,0,1,2},"T3");
-    passed += test({1},{1},"T4");
-    passed += test({3,3,1,1},{1,1,3,3},"T5");
-    if (passed == total) cout << "ALL_PASS:" << total << "/" << total << " test cases passed\n";
-    else cout << "PARTIAL:" << passed << "/" << total << " test cases passed\n";
-    return 0;
-}`
-    },
-
-    testCases: [
-      { label:'Test 1', input:[[64,34,25,12,22,11,90]], expected:'[11,12,22,25,34,64,90]', wrongOutput:'[64,34,25,12,22,11,90]' },
-      { label:'Test 2', input:[[5,1,4,2,8]],            expected:'[1,2,4,5,8]',            wrongOutput:'[5,1,4,2,8]' },
-      { label:'Test 3', input:[[-3,1,-1,2,0]],           expected:'[-3,-1,0,1,2]',          wrongOutput:'[-3,1,-1,2,0]' },
-      { label:'Test 4', input:[[1]],                     expected:'[1]',                    wrongOutput:'undefined' },
-      { label:'Test 5', input:[[3,3,1,1]],               expected:'[1,1,3,3]',              wrongOutput:'[3,3,1,1]' },
-    ],
-    validator: `function bubbleSort(arr){const n=arr.length;for(let i=0;i<n-1;i++){for(let j=0;j<n-1-i;j++){if(arr[j]>arr[j+1]){let t=arr[j];arr[j]=arr[j+1];arr[j+1]=t;}}}return arr;}`,
-    validatorRunner: `
-      const cases=[[[64,34,25,12,22,11,90],[11,12,22,25,34,64,90]],[[5,1,4,2,8],[1,2,4,5,8]],[[-3,1,-1,2,0],[-3,-1,0,1,2]],[[1],[1]],[[3,3,1,1],[1,1,3,3]]];
-      let p=0,f=0;
-      cases.forEach(([arr,exp],i)=>{const r=bubbleSort([...arr]);const ok=r.length===exp.length&&r.every((v,j)=>v===exp[j]);if(ok)p++;else{f++;console.log('❌ Test '+(i+1)+': got ['+r+'], expected ['+exp+']');}});
-      if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-      else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');
-    `,
-    fixChecks: {
-      python: [
-        { pattern: /for\s+i\s+in\s+range\s*\(\s*n\s*-\s*1\s*\)/, description: 'Fix BUG 1: outer loop range(n-1)' },
-        { pattern: /for\s+j\s+in\s+range\s*\(\s*n\s*-\s*1\s*-\s*i\s*\)/, description: 'Fix BUG 2: inner loop range(n-1-i)' },
-        { pattern: /if\s+arr\s*\[\s*j\s*\]\s*>\s*arr\s*\[\s*j\s*\+\s*1\s*\]/, description: 'Fix BUG 3: correct comparison arr[j] > arr[j+1]' },
-      ],
-      cpp: [
-        { pattern: /i\s*<\s*n\s*-\s*1/, description: 'Fix BUG 1: outer loop i < n-1' },
-        { pattern: /j\s*<\s*n\s*-\s*1\s*-\s*i/, description: 'Fix BUG 2: inner loop j < n-1-i' },
-        { pattern: /arr\s*\[\s*j\s*\]\s*>\s*arr\s*\[\s*j\s*\+\s*1\s*\]/, description: 'Fix BUG 3: correct comparison arr[j] > arr[j+1]' },
-      ],
-    },
-    solvedBy: false
-  },
-  {
-    id: 4,
-    title: "Stack Overflow Exploit",
-    difficulty: "MEDIUM",
-    points: 200,
-    category: "Stack",
-    description: "The bracket validation firewall is broken — it's allowing malformed code through the security scanner. The stack-based parentheses checker has logic errors that cause it to approve invalid expressions. Multiple bugs have been injected. Patch the vulnerability.",
-    constraints: ["1 ≤ s.length ≤ 10⁴", "String contains only ()[]{}","Empty string returns true"],
-    examples: [
-      { input: `s="()[]{}"`, output: "true" },
-      { input: `s="([)]"`, output: "false" },
-      { input: `s="{[]}"`, output: "true" }
-    ],
-    hints: [
-      "Check what gets pushed to the stack for closing brackets",
-      "The map lookup for closing brackets might have reversed key/value",
-      "The final return condition might be inverted"
-    ],
-    buggyCode: {
-      javascript: `function isValid(s) {
-  const stack = [];
-  const map = {
-    ')': '(',
-    ']': '[',
-    '}': '{'
-  };
-  
-  for (let char of s) {
-    if (char === '(' || char === '[' || char === '{') {
-      stack.push(char);
-    } else {
-      const top = stack.pop(); // BUG 1: should check if stack is empty
-      if (top !== map[char]) { // BUG 2: map is inverted
-        return true; // BUG 3: should return false
-      }
-    }
-  }
-  
-  return stack.length > 0; // BUG 4: should be length === 0
-}`,
-      python: `def is_valid(s):
-    stack = []
-    mapping = {')': '(', ']': '[', '}': '{'}
-    
-    for char in s:
-        if char in '([{':
-            stack.append(char)
-        else:
-            if not stack:
-                return False
-            top = stack.pop()
-            if top != mapping[char]:  # BUG: mapping is inverted
-                return True  # BUG: should return False
-    
-    return len(stack) > 0  # BUG: should be == 0`,
-      cpp: `bool isValid(string s) {
-    stack<char> st;
-    map<char,char> mp = {{')', '('}, {']', '['}, {'}', '{'}};
-    
-    for (char c : s) {
-        if (c=='(' || c=='[' || c=='{') st.push(c);
-        else {
-            if (st.empty()) return false;
-            char top = st.top(); st.pop();
-            if (top != mp[c]) return true; // BUG
-        }
-    }
-    return !st.empty(); // BUG
-}`
-    },
-    testCode: {
-      javascript: `
-let passed = 0, failed = 0, errors = [];
-function testV(input, expected, label) {
-  try {
-    const result = isValid(input);
-    if (result === expected) { passed++; }
-    else { failed++; errors.push(\`❌ \${label}: got \${result}, expected \${expected}\`); }
-  } catch(e) { failed++; errors.push(\`💥 \${label}: RUNTIME ERROR - \${e.message}\`); }
-}
-testV("()[]{}", true, "T1"); testV("([)]", false, "T2"); testV("{[]}", true, "T3");
-testV("(", false, "T4"); testV("", true, "T5"); testV("((()))", true, "T6"); testV("]", false, "T7");
-if (failed === 0) { console.log("ALL_PASS:7/7 test cases passed"); }
-else { errors.forEach(e => console.log(e)); console.log(\`PARTIAL:\${passed}/\${passed+failed} test cases passed\`); }`,
-      python: `
-
-def run_tests():
-    cases = [("()[]{}", True,"T1"),("([)]",False,"T2"),("{[]}",True,"T3"),("(",False,"T4"),("",True,"T5"),("((()))",True,"T6"),("]",False,"T7")]
-    passed = 0; failed = 0
-    for s, expected, label in cases:
-        try:
-            result = is_valid(s)
-            if result == expected: passed += 1
-            else: failed += 1; print(f"\u274c {label}: got {result}, expected {expected}")
-        except Exception as e: failed += 1; print(f"\U0001f4a5 {label}: {e}")
-    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
-    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
-run_tests()`,
-      cpp: `
-
-int main() {
-    auto test = [](string s, bool expected, string label) -> bool {
-        bool result = isValid(s);
-        if (result == expected) return true;
-        cout << "\u274c " << label << ": got " << result << ", expected " << expected << "\n";
-        return false;
-    };
-    int passed = 0, total = 7;
-    passed += test("()[]{}", true, "T1"); passed += test("([)]", false, "T2");
-    passed += test("{[]}", true, "T3"); passed += test("(", false, "T4");
-    passed += test("", true, "T5"); passed += test("((()))", true, "T6");
-    passed += test("]", false, "T7");
-    if (passed == total) cout << "ALL_PASS:" << total << "/" << total << " test cases passed\n";
-    else cout << "PARTIAL:" << passed << "/" << total << " test cases passed\n";
-    return 0;
-}`
-    },
-
-    testCases: [
-      { label:'Test 1', input:['()[]{}'],  expected:'true',  wrongOutput:'false' },
-      { label:'Test 2', input:['([)]'],    expected:'false', wrongOutput:'true'  },
-      { label:'Test 3', input:['{[]}'],    expected:'true',  wrongOutput:'false' },
-      { label:'Test 4', input:['('],       expected:'false', wrongOutput:'true'  },
-      { label:'Test 5', input:[''],        expected:'true',  wrongOutput:'false' },
-      { label:'Test 6', input:['((()))'],  expected:'true',  wrongOutput:'false' },
-      { label:'Test 7', input:[']'],       expected:'false', wrongOutput:'true'  },
-    ],
-    validator: `function isValid(s){const st=[],m={')':'(',']':'[','}':'{'};for(const c of s){if('([{'.includes(c))st.push(c);else{if(!st.length||st[st.length-1]!==m[c])return false;st.pop();}}return st.length===0;}`,
-    validatorRunner: `
-      const cases=[['()[]{}'  ,true],['([)]',false],['{[]}',true],['(',false],['',true],['((()))',true],[']',false]];
-      let p=0,f=0;
-      cases.forEach(([s,exp],i)=>{const r=isValid(s);if(r===exp)p++;else{f++;console.log('❌ Test '+(i+1)+': got '+r+', expected '+exp);}});
-      if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-      else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');
-    `,
-    fixChecks: {
-      python: [
-        { pattern: /if\s+(not\s+stack|len\s*\(\s*stack\s*\)\s*==\s*0)/, description: 'Fix BUG 1: check if stack is empty before pop' },
-        { pattern: /return\s+False/, description: 'Fix BUG 2 & 3: return False on mismatch (not True)' },
-        { pattern: /return\s+len\s*\(\s*stack\s*\)\s*==\s*0/, description: 'Fix BUG 4: return len(stack) == 0' },
-      ],
-      cpp: [
-        { pattern: /if\s*\(\s*st\s*\.\s*empty\s*\(\s*\)\s*\)/, description: 'Fix BUG 1: check stack empty' },
-        { pattern: /return\s+false/, description: 'Fix BUG 2: return false on mismatch' },
-        { pattern: /return\s+st\s*\.\s*empty\s*\(\s*\)/, description: 'Fix BUG 3: return st.empty()' },
-      ],
-    },
-    solvedBy: false
-  },
-  {
-    id: 5,
-    title: "Hash Map Heist",
-    difficulty: "HARD",
-    points: 300,
-    category: "Hash Map",
-    description: "CRITICAL BREACH. The two-sum encryption module is malfunctioning — it's returning wrong indices and causing decryption failures. Three bugs were planted by an insider threat. The hash map lookups are corrupted. This is your final challenge. Fix the algorithm before the system goes dark.",
-    constraints: ["2 ≤ nums.length ≤ 10⁴", "Exactly one solution exists","Cannot use same element twice"],
-    examples: [
-      { input: "nums=[2,7,11,15], target=9", output: "[0,1]" },
-      { input: "nums=[3,2,4], target=6", output: "[1,2]" },
-      { input: "nums=[3,3], target=6", output: "[0,1]" }
-    ],
-    hints: [
-      "Check what is stored in the map — should it be value→index or index→value?",
-      "The complement calculation might have an operator error",
-      "The order of checking vs inserting into the map matters"
-    ],
-    buggyCode: {
-      javascript: `function twoSum(nums, target) {
-  const map = {}; // stores index -> value (BUG 1: should be value -> index)
-  
-  for (let i = 0; i < nums.length; i++) {
-    map[i] = nums[i]; // BUG 1
-  }
-  
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target + nums[i]; // BUG 2: should be target - nums[i]
-    
-    if (map[complement] !== undefined && map[complement] !== i) { // BUG 3: wrong lookup
-      return [i, map[complement]];
-    }
-  }
-  
-  return [];
-}`,
-      python: `def two_sum(nums, target):
-    num_map = {}  # stores index -> value (BUG 1)
-    
-    for i, num in enumerate(nums):
-        num_map[i] = num  # BUG 1: should be num_map[num] = i
-    
-    for i, num in enumerate(nums):
-        complement = target + num  # BUG 2: should be target - num
-        
-        if complement in num_map and num_map[complement] != i:  # BUG 3
-            return [i, num_map[complement]]
-    
-    return []`,
-      cpp: `vector<int> twoSum(vector<int>& nums, int target) {
-    unordered_map<int,int> mp;
-    
-    for (int i = 0; i < nums.size(); i++)
-        mp[i] = nums[i]; // BUG 1: should be mp[nums[i]] = i
-    
-    for (int i = 0; i < nums.size(); i++) {
-        int complement = target + nums[i]; // BUG 2
-        if (mp.count(complement) && mp[complement] != i) // BUG 3
-            return {i, mp[complement]};
-    }
-    return {};
-}`
-    },
-    testCode: {
-      javascript: `
-function arrEqTS(a,b){return a.length===b.length&&[...a].sort().join()===([...b]).sort().join();}
-let passed = 0, failed = 0, errors = [];
-function testTS(nums, target, expected, label) {
-  try {
-    const result = twoSum([...nums], target);
-    if (arrEqTS(result, expected)) { passed++; }
-    else { failed++; errors.push(\`❌ \${label}: got [\${result}], expected [\${expected}]\`); }
-  } catch(e) { failed++; errors.push(\`💥 \${label}: RUNTIME ERROR - \${e.message}\`); }
-}
-testTS([2,7,11,15],9,[0,1],"T1"); testTS([3,2,4],6,[1,2],"T2");
-testTS([3,3],6,[0,1],"T3"); testTS([1,5,3,7],8,[1,3],"T4"); testTS([0,4,3,0],0,[0,3],"T5");
-if (failed === 0) { console.log("ALL_PASS:5/5 test cases passed"); }
-else { errors.forEach(e => console.log(e)); console.log(\`PARTIAL:\${passed}/\${passed+failed} test cases passed\`); }`,
-      python: `
-
-def run_tests():
-    cases = [
-        ([2,7,11,15],9,[0,1],"T1"),([3,2,4],6,[1,2],"T2"),
-        ([3,3],6,[0,1],"T3"),([1,5,3,7],8,[1,3],"T4"),([0,4,3,0],0,[0,3],"T5")
-    ]
-    passed = 0; failed = 0
-    for nums, target, expected, label in cases:
-        try:
-            result = sorted(two_sum(list(nums), target))
-            if result == sorted(expected): passed += 1
-            else: failed += 1; print(f"\u274c {label}: got {result}, expected {expected}")
-        except Exception as e: failed += 1; print(f"\U0001f4a5 {label}: {e}")
-    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
-    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
-run_tests()`,
-      cpp: `
-
-int main() {
-    auto cmp = [](vector<int> a, vector<int> b){ sort(a.begin(),a.end()); sort(b.begin(),b.end()); return a==b; };
-    auto test = [&](vector<int> nums, int target, vector<int> expected, string label) -> bool {
-        vector<int> result = twoSum(nums, target);
-        if (cmp(result, expected)) return true;
-        cout << "\u274c " << label << ": wrong output\n";
-        return false;
-    };
-    int passed = 0, total = 5;
-    passed += test({2,7,11,15},9,{0,1},"T1"); passed += test({3,2,4},6,{1,2},"T2");
-    passed += test({3,3},6,{0,1},"T3"); passed += test({1,5,3,7},8,{1,3},"T4");
-    passed += test({0,4,3,0},0,{0,3},"T5");
-    if (passed == total) cout << "ALL_PASS:" << total << "/" << total << " test cases passed\n";
-    else cout << "PARTIAL:" << passed << "/" << total << " test cases passed\n";
-    return 0;
-}`
-    },
-
-    testCases: [
-      { label:'Test 1', input:[[2,7,11,15],9],  expected:'[0,1]', wrongOutput:'[]' },
-      { label:'Test 2', input:[[3,2,4],6],       expected:'[1,2]', wrongOutput:'[]' },
-      { label:'Test 3', input:[[3,3],6],         expected:'[0,1]', wrongOutput:'[]' },
-      { label:'Test 4', input:[[1,5,3,7],8],     expected:'[1,3]', wrongOutput:'[]' },
-      { label:'Test 5', input:[[0,4,3,0],0],     expected:'[0,3]', wrongOutput:'[]' },
-    ],
-    validator: `function twoSum(nums,target){const m={};for(let i=0;i<nums.length;i++){const c=target-nums[i];if(m[c]!==undefined)return[m[c],i];m[nums[i]]=i;}return[];}`,
-    validatorRunner: `
-      const eq=(a,b)=>a.length===b.length&&[...a].sort().join()===[...b].sort().join();
-      const cases=[[[2,7,11,15],9,[0,1]],[[3,2,4],6,[1,2]],[[3,3],6,[0,1]],[[1,5,3,7],8,[1,3]],[[0,4,3,0],0,[0,3]]];
-      let p=0,f=0;
-      cases.forEach(([nums,t,exp],i)=>{const r=twoSum([...nums],t);if(eq(r,exp))p++;else{f++;console.log('❌ Test '+(i+1)+': got ['+r+'], expected ['+exp+']');}});
-      if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-      else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');
-    `,
-    fixChecks: {
-      python: [
-        { pattern: /num_map\s*\[\s*num\s*\]\s*=\s*i/, description: 'Fix BUG 1: store num_map[num] = i' },
-        { pattern: /complement\s*=\s*target\s*-\s*num/, description: 'Fix BUG 2: complement = target - num' },
-        { pattern: /if\s+complement\s+in\s+num_map/, description: 'Fix BUG 3: look up complement in num_map' },
-      ],
-      cpp: [
-        { pattern: /mp\s*\[\s*nums\s*\[\s*i\s*\]\s*\]\s*=\s*i/, description: 'Fix BUG 1: store mp[nums[i]] = i' },
-        { pattern: /complement\s*=\s*target\s*-\s*nums\s*\[\s*i\s*\]/, description: 'Fix BUG 2: complement = target - nums[i]' },
-        { pattern: /mp\s*\.count\s*\(\s*complement\s*\)/, description: 'Fix BUG 3: look up complement in map' },
-      ],
-    },
-    solvedBy: false
-  },
-
-  // ═══════════════════════════════════════════
-  // Q6 — CYCLE DETECTION INTRUSION (HARD)
-  // ═══════════════════════════════════════════
-  {
-    id: 6,
-    title: "Cycle Detection Intrusion",
-    difficulty: "HARD",
-    points: 350,
-    category: "Linked List",
-    description: "ALERT: A rogue process has injected a cycle into the network packet chain. Your Floyd's Cycle Detection scanner (Tortoise & Hare) is broken — the fast pointer moves wrong, a null check is missing causing instant crash, and the algorithm loops forever on valid inputs. The intrusion goes undetected. Fix all three bugs before the network collapses.",
-    constraints: ["0 ≤ nodes ≤ 10⁴", "Node values can be any integer", "-1 means no cycle (pos = -1)"],
-    examples: [
-      { input: "head=[3,2,0,-4], pos=1", output: "true (cycle at node 1)" },
-      { input: "head=[1,2], pos=0",       output: "true (cycle at node 0)" },
-      { input: "head=[1], pos=-1",        output: "false (no cycle)" }
-    ],
-    hints: [
-      "Fast pointer should advance by 2 steps, not 1 — it currently moves the same as slow",
-      "Missing null check: what if head or head.next is null before the loop?",
-      "The loop condition needs to guard fast AND fast.next against null"
-    ],
-    buggyCode: {
-      javascript: `function hasCycle(head) {
-  // BUG 1: no null guard — crashes on empty list
+// ═══════════════════════════════════════════
+// Q6 — CYCLE DETECTION INTRUSION (HARD)
+// ═══════════════════════════════════════════
+const QUESTIONS= [
+{
+  id: 6,
+  title: "Cycle Detection Intrusion",
+  difficulty: "HARD",
+  points: 350,
+  category: "Linked List",
+  description: "ALERT: A rogue process has injected a cycle into the network packet chain. Your Floyd's Cycle Detection scanner (Tortoise & Hare) is broken — a null guard is missing causing an instant crash on empty input, the fast pointer only moves one step instead of two (making it identical to slow), and the loop condition fails to guard fast.next against null causing a runtime error. The intrusion goes undetected. Fix all three bugs before the network collapses.",
+  constraints: [
+    "0 ≤ nodes ≤ 10⁴",
+    "Node values can be any integer",
+    "-1 means no cycle (pos = -1)"
+  ],
+  examples: [
+    { input: "head=[3,2,0,-4], pos=1", output: "true (cycle at node 1)" },
+    { input: "head=[1,2], pos=0",       output: "true (cycle at node 0)" },
+    { input: "head=[1], pos=-1",        output: "false (no cycle)" }
+  ],
+  hints: [
+    "BUG 1: What happens if head is null? Add a guard before initializing slow/fast",
+    "BUG 2: Fast pointer should advance by 2 steps — fast = fast.next.next, not fast.next",
+    "BUG 3: The while condition must check fast AND fast.next to avoid a null dereference"
+  ],
+  buggyCode: {
+    javascript: `function hasCycle(head) {
+  // BUG 1: missing null guard — crashes if head is null
   let slow = head;
   let fast = head;
-  
-  while (fast !== null && fast.next !== null) {
+
+  while (fast.next !== null) { // BUG 3: must also check fast !== null
     slow = slow.next;
     fast = fast.next; // BUG 2: should be fast.next.next
-    
+
     if (slow === fast) {
       return true;
     }
   }
-  
-  return false; // BUG 3: actually correct — but BUG 2 makes this unreachable for cycles
+
+  return false;
 }`,
-      python: `def has_cycle(head):
-    # BUG 1: no null guard
+    python: `def has_cycle(head):
+    # BUG 1: no null guard — crashes if head is None
     slow = head
     fast = head
-    
-    while fast is not None and fast.next is not None:
+
+    while fast.next is not None:  # BUG 3: must also check fast is not None
         slow = slow.next
         fast = fast.next  # BUG 2: should be fast.next.next
-        
+
         if slow is fast:
             return True
-    
+
     return False`,
-      cpp: `bool hasCycle(ListNode *head) {
+    cpp: `bool hasCycle(ListNode *head) {
     // BUG 1: no null guard
     ListNode *slow = head;
     ListNode *fast = head;
-    
-    while (fast != nullptr && fast->next != nullptr) {
+
+    while (fast->next != nullptr) { // BUG 3: must also check fast != nullptr
         slow = slow->next;
         fast = fast->next; // BUG 2: should be fast->next->next
-        
+
         if (slow == fast) return true;
     }
-    
+
     return false;
 }`,
-      java: `public boolean hasCycle(ListNode head) {
+    java: `public boolean hasCycle(ListNode head) {
     // BUG 1: no null guard
     ListNode slow = head;
     ListNode fast = head;
-    
-    while (fast != null && fast.next != null) {
+
+    while (fast.next != null) { // BUG 3: must also check fast != null
         slow = slow.next;
         fast = fast.next; // BUG 2: should be fast.next.next
-        
+
         if (slow == fast) return true;
     }
-    
+
     return false;
 }`,
-      c: `bool hasCycle(struct ListNode *head) {
-    // BUG 1: no null guard
+    c: `bool hasCycle(struct ListNode *head) {
+    /* BUG 1: no null guard */
     struct ListNode *slow = head;
     struct ListNode *fast = head;
-    
-    while (fast != NULL && fast->next != NULL) {
+
+    while (fast->next != NULL) { /* BUG 3: must also check fast != NULL */
         slow = slow->next;
         fast = fast->next; /* BUG 2: should be fast->next->next */
-        
+
         if (slow == fast) return true;
     }
-    
+
     return false;
 }`
-    },
-    testCode: {
-      javascript: `
-// Node builder
+  },
+  testCode: {
+    javascript: `
 function buildList(vals, pos) {
   if (!vals.length) return null;
   const nodes = vals.map(v => ({ val: v, next: null }));
@@ -1128,82 +407,128 @@ function buildList(vals, pos) {
   if (pos >= 0) nodes[nodes.length-1].next = nodes[pos];
   return nodes[0];
 }
-let p=0,f=0;
-function testC(vals,pos,exp,label){
-  try{
-    const r=hasCycle(buildList(vals,pos));
-    if(r===exp){p++;}
-    else{f++;console.log('❌ '+label+': got '+r+', expected '+exp);}
-  }catch(e){f++;console.log('💥 '+label+': '+e.message);}
+let p=0, f=0;
+function testC(vals, pos, exp, label) {
+  try {
+    const r = hasCycle(buildList(vals, pos));
+    if (r === exp) { p++; }
+    else { f++; console.log('❌ ' + label + ': got ' + r + ', expected ' + exp); }
+  } catch(e) { f++; console.log('💥 ' + label + ': ' + e.message); }
 }
-testC([3,2,0,-4],1,true,'Test 1');
-testC([1,2],0,true,'Test 2');
-testC([1],-1,false,'Test 3');
-testC([],-1,false,'Test 4');
-testC([1,2,3,4,5],2,true,'Test 5');
-if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`
-    },
-    testCases: [
-      { label:'Test 1', input:[[3,2,0,-4],1],  expected:'true',  wrongOutput:'false' },
-      { label:'Test 2', input:[[1,2],0],        expected:'true',  wrongOutput:'false' },
-      { label:'Test 3', input:[[1],-1],         expected:'false', wrongOutput:'true'  },
-      { label:'Test 4', input:[[],  -1],        expected:'false', wrongOutput:'crash' },
-      { label:'Test 5', input:[[1,2,3,4,5],2],  expected:'true',  wrongOutput:'false' },
-    ],
-    validator: `
+testC([3,2,0,-4], 1,  true,  'Test 1');
+testC([1,2],       0,  true,  'Test 2');
+testC([1],        -1,  false, 'Test 3');
+testC([],         -1,  false, 'Test 4');
+testC([1,2,3,4,5], 2,  true,  'Test 5');
+if (f === 0) console.log('ALL_PASS:' + p + '/' + p + ' test cases passed');
+else console.log('PARTIAL:' + p + '/' + (p+f) + ' test cases passed');`,
+    python: `
+def build_list(vals, pos):
+    if not vals:
+        return None
+    class Node:
+        def __init__(self, v): self.val=v; self.next=None
+    nodes = [Node(v) for v in vals]
+    for i in range(len(nodes)-1): nodes[i].next = nodes[i+1]
+    if pos >= 0: nodes[-1].next = nodes[pos]
+    return nodes[0]
+
+def run_tests():
+    cases = [
+        ([3,2,0,-4], 1,  True,  'Test 1'),
+        ([1,2],       0,  True,  'Test 2'),
+        ([1],        -1,  False, 'Test 3'),
+        ([],         -1,  False, 'Test 4'),
+        ([1,2,3,4,5], 2,  True,  'Test 5'),
+    ]
+    passed = 0; failed = 0
+    for vals, pos, expected, label in cases:
+        try:
+            result = has_cycle(build_list(vals, pos))
+            if result == expected: passed += 1
+            else: failed += 1; print(f"❌ {label}: got {result}, expected {expected}")
+        except Exception as e: failed += 1; print(f"💥 {label}: RUNTIME ERROR - {e}")
+    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
+    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
+run_tests()`,
+    cpp: `
+int main() {
+    // build helper omitted for brevity — uses standard linked list construction
+    // Test via online judge or wrap with a ListNode builder
+    cout << "Run via LeetCode-style harness\n";
+    return 0;
+}`
+  },
+  testCases: [
+    { label: 'Test 1', input: [[3,2,0,-4], 1],  expected: 'true',  wrongOutput: 'crash / false' },
+    { label: 'Test 2', input: [[1,2], 0],        expected: 'true',  wrongOutput: 'false' },
+    { label: 'Test 3', input: [[1], -1],          expected: 'false', wrongOutput: 'crash' },
+    { label: 'Test 4', input: [[], -1],           expected: 'false', wrongOutput: 'crash' },
+    { label: 'Test 5', input: [[1,2,3,4,5], 2],  expected: 'true',  wrongOutput: 'false' },
+  ],
+  validator: `
 function buildList(vals,pos){if(!vals.length)return null;const nodes=vals.map(v=>({val:v,next:null}));for(let i=0;i<nodes.length-1;i++)nodes[i].next=nodes[i+1];if(pos>=0)nodes[nodes.length-1].next=nodes[pos];return nodes[0];}
 function hasCycle(head){if(!head)return false;let s=head,f=head;while(f&&f.next){s=s.next;f=f.next.next;if(s===f)return true;}return false;}`,
-    validatorRunner: `
+  validatorRunner: `
 const cases=[[[3,2,0,-4],1,true],[[1,2],0,true],[[1],-1,false],[[],  -1,false],[[1,2,3,4,5],2,true]];
 let p=0,f=0;
 cases.forEach(([v,pos,exp],i)=>{const r=hasCycle(buildList(v,pos));if(r===exp)p++;else{f++;console.log('❌ Test '+(i+1)+': got '+r+', expected '+exp);}});
 if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
 else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
-    fixChecks: {
-      python: [
-        { pattern: /if\s+(head\s+is\s+None|not\s+head)/, description: 'Fix BUG 1: null guard — if not head: return False' },
-        { pattern: /fast\s*=\s*fast\s*\.\s*next\s*\.\s*next/, description: 'Fix BUG 2: fast = fast.next.next (two hops)' },
-      ],
-      cpp: [
-        { pattern: /if\s*\(\s*(head\s*==\s*nullptr|!head)\s*\)/, description: 'Fix BUG 1: null guard before loop' },
-        { pattern: /fast\s*=\s*fast\s*->\s*next\s*->\s*next/, description: 'Fix BUG 2: fast = fast->next->next' },
-      ],
-      java: [
-        { pattern: /if\s*\(\s*head\s*==\s*null\s*\)/, description: 'Fix BUG 1: null guard — if (head == null) return false' },
-        { pattern: /fast\s*=\s*fast\s*\.\s*next\s*\.\s*next/, description: 'Fix BUG 2: fast = fast.next.next' },
-      ],
-      c: [
-        { pattern: /if\s*\(\s*(head\s*==\s*NULL|!head)\s*\)/, description: 'Fix BUG 1: null guard — if (!head) return false' },
-        { pattern: /fast\s*=\s*fast\s*->\s*next\s*->\s*next/, description: 'Fix BUG 2: fast = fast->next->next' },
-      ],
-    },
-    solvedBy: false
+  fixChecks: {
+    javascript: [
+      { pattern: /if\s*\(\s*!head\s*\)\s*return\s+false/, description: 'Fix BUG 1: if (!head) return false — guard null input' },
+      { pattern: /fast\s*=\s*fast\.next\.next/, description: 'Fix BUG 2: fast = fast.next.next — advance two steps' },
+      { pattern: /while\s*\(\s*fast\s*!==\s*null\s*&&\s*fast\.next\s*!==\s*null\s*\)/, description: 'Fix BUG 3: while (fast !== null && fast.next !== null)' },
+    ],
+    python: [
+      { pattern: /if\s+(head\s+is\s+None|not\s+head)\s*:\s*return\s+False/, description: 'Fix BUG 1: if not head: return False' },
+      { pattern: /fast\s*=\s*fast\.next\.next/, description: 'Fix BUG 2: fast = fast.next.next' },
+      { pattern: /while\s+fast\s+is\s+not\s+None\s+and\s+fast\.next\s+is\s+not\s+None/, description: 'Fix BUG 3: while fast is not None and fast.next is not None' },
+    ],
+    cpp: [
+      { pattern: /if\s*\(\s*(head\s*==\s*nullptr|!head)\s*\)\s*return\s+false/, description: 'Fix BUG 1: if (!head) return false' },
+      { pattern: /fast\s*=\s*fast->next->next/, description: 'Fix BUG 2: fast = fast->next->next' },
+      { pattern: /while\s*\(\s*fast\s*!=\s*nullptr\s*&&\s*fast->next\s*!=\s*nullptr\s*\)/, description: 'Fix BUG 3: while (fast != nullptr && fast->next != nullptr)' },
+    ],
+    java: [
+      { pattern: /if\s*\(\s*head\s*==\s*null\s*\)\s*return\s+false/, description: 'Fix BUG 1: if (head == null) return false' },
+      { pattern: /fast\s*=\s*fast\.next\.next/, description: 'Fix BUG 2: fast = fast.next.next' },
+      { pattern: /while\s*\(\s*fast\s*!=\s*null\s*&&\s*fast\.next\s*!=\s*null\s*\)/, description: 'Fix BUG 3: while (fast != null && fast.next != null)' },
+    ],
+    c: [
+      { pattern: /if\s*\(\s*(!head|head\s*==\s*NULL)\s*\)\s*return\s+false/, description: 'Fix BUG 1: if (!head) return false' },
+      { pattern: /fast\s*=\s*fast->next->next/, description: 'Fix BUG 2: fast = fast->next->next' },
+      { pattern: /while\s*\(\s*fast\s*!=\s*NULL\s*&&\s*fast->next\s*!=\s*NULL\s*\)/, description: 'Fix BUG 3: while (fast != NULL && fast->next != NULL)' },
+    ],
   },
+  solvedBy: false,
+},
 
-  // ═══════════════════════════════════════════
-  // Q7 — LRU CACHE CORRUPTION (HARD+)
-  // ═══════════════════════════════════════════
-  {
-    id: 7,
-    title: "LRU Cache Corruption",
-    difficulty: "HARD+",
-    points: 400,
-    category: "Design",
-    description: "CRITICAL SYSTEM FAILURE. The LRU Cache powering our identity broker is corrupted. The eviction policy is broken — wrong capacity logic accepts one extra entry, nodes aren't removed from their current position before being promoted (causing dangling pointers), and memory leaks when evicting. Three planted bugs have turned our cache into a ghost machine. Restore it.",
-    constraints: ["1 ≤ capacity ≤ 3000", "0 ≤ key, value ≤ 10⁴", "get/put called up to 2×10⁵ times"],
-    examples: [
-      { input: 'LRUCache(2): put(1,1), put(2,2), get(1)', output: '1' },
-      { input: 'put(3,3) → evicts key 2',                 output: 'get(2) = -1' },
-      { input: 'put(4,4) → evicts key 1',                 output: 'get(1) = -1, get(3)=3, get(4)=4' }
-    ],
-    hints: [
-      "Capacity check uses > instead of >= — it allows one extra item before evicting",
-      "On put/get, the node must be REMOVED from its current position before being moved to front",
-      "The evict logic removes the tail but forgets to delete it from the map"
-    ],
-    buggyCode: {
-      javascript: `class LRUCache {
+{
+  id: 7,
+  title: "LRU Cache Corruption",
+  difficulty: "HARD+",
+  points: 400,
+  category: "Design",
+  description: "CRITICAL SYSTEM FAILURE. The LRU Cache powering our identity broker is corrupted. Three planted bugs have turned it into a ghost machine: the eviction threshold is off-by-one (accepts one extra entry before evicting), nodes aren't unlinked before being promoted to front (causing pointer corruption), and the evicted node is never removed from the map (memory leak, stale keys returned). Restore it.",
+  constraints: [
+    "1 <= capacity <= 3000",
+    "0 <= key, value <= 10^4",
+    "get/put called up to 2x10^5 times"
+  ],
+  examples: [
+    { input: "LRUCache(2): put(1,1), put(2,2), get(1)", output: "1" },
+    { input: "put(3,3) -> evicts key 2",                 output: "get(2) = -1" },
+    { input: "put(4,4) -> evicts key 1",                 output: "get(1) = -1, get(3)=3, get(4)=4" }
+  ],
+  hints: [
+    "BUG 1: Eviction check uses > capacity + 1 instead of > capacity -- allows one ghost entry",
+    "BUG 2: _addToFront does NOT call _remove first -- existing nodes must be unlinked before relinking",
+    "BUG 3: After evicting the LRU node, map.delete(lru.key) is never called -- stale keys linger"
+  ],
+  buggyCode: {
+    javascript: `class LRUCache {
   constructor(capacity) {
     this.capacity = capacity;
     this.map = new Map();
@@ -1212,20 +537,20 @@ else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
     this.head.next = this.tail;
     this.tail.prev = this.head;
   }
-  
+
   _remove(node) {
     node.prev.next = node.next;
     node.next.prev = node.prev;
   }
-  
+
   _addToFront(node) {
-    // BUG 2: should call _remove(node) first when re-inserting existing node
+    // BUG 2: must call this._remove(node) first for nodes already in the list
     node.next = this.head.next;
     node.prev = this.head;
     this.head.next.prev = node;
     this.head.next = node;
   }
-  
+
   get(key) {
     if (!this.map.has(key)) return -1;
     const node = this.map.get(key);
@@ -1233,7 +558,7 @@ else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
     this._addToFront(node);
     return node.val;
   }
-  
+
   put(key, value) {
     if (this.map.has(key)) {
       const node = this.map.get(key);
@@ -1244,15 +569,15 @@ else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
       const node = { key, val: value, prev: null, next: null };
       this.map.set(key, node);
       this._addToFront(node);
-      if (this.map.size > this.capacity + 1) { // BUG 1: should be > capacity
+      if (this.map.size > this.capacity + 1) { // BUG 1: should be > this.capacity
         const lru = this.tail.prev;
         this._remove(lru);
-        // BUG 3: map.delete(lru.key) is missing — memory leak!
+        // BUG 3: this.map.delete(lru.key) is missing
       }
     }
   }
 }`,
-      python: `class LRUCache:
+    python: `class LRUCache:
     class Node:
         def __init__(self, key=0, val=0):
             self.key = key
@@ -1273,7 +598,7 @@ else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
         node.next.prev = node.prev
 
     def _add_to_front(self, node):
-        # BUG 2: should call self._remove(node) first for existing nodes
+        # BUG 2: must call self._remove(node) first for existing nodes
         node.next = self.head.next
         node.prev = self.head
         self.head.next.prev = node
@@ -1301,20 +626,20 @@ else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
                 lru = self.tail.prev
                 self._remove(lru)
                 # BUG 3: del self.cache[lru.key] is missing`,
-      cpp: `class LRUCache {
+    cpp: `class LRUCache {
     int cap;
     list<pair<int,int>> dll;
     unordered_map<int, list<pair<int,int>>::iterator> mp;
 public:
     LRUCache(int capacity) : cap(capacity) {}
-    
+
     int get(int key) {
         if (!mp.count(key)) return -1;
         auto it = mp[key];
-        dll.splice(dll.begin(), dll, it); // move to front
+        dll.splice(dll.begin(), dll, it);
         return it->second;
     }
-    
+
     void put(int key, int value) {
         if (mp.count(key)) {
             mp[key]->second = value;
@@ -1324,37 +649,37 @@ public:
             mp[key] = dll.begin();
             if ((int)dll.size() > cap + 1) { // BUG 1: should be > cap
                 auto lru = dll.back();
-                // BUG 3: mp.erase(lru.first) is missing
-                dll.pop_back(); // BUG 2: pop before erase loses the key
+                // BUG 3: mp.erase(lru.first) must come BEFORE pop_back
+                dll.pop_back(); // BUG 2: popping before erasing from map loses the key
             }
         }
     }
 };`,
-      java: `class LRUCache {
+    java: `class LRUCache {
     private int capacity;
     private Map<Integer, Node> map;
     private Node head, tail;
-    
+
     class Node {
         int key, val;
         Node prev, next;
-        Node(int k, int v) { key=k; val=v; }
+        Node(int k, int v) { key = k; val = v; }
     }
-    
+
     public LRUCache(int capacity) {
         this.capacity = capacity;
         map = new HashMap<>();
-        head = new Node(0,0);
-        tail = new Node(0,0);
+        head = new Node(0, 0);
+        tail = new Node(0, 0);
         head.next = tail;
         tail.prev = head;
     }
-    
+
     private void remove(Node n) {
         n.prev.next = n.next;
         n.next.prev = n.prev;
     }
-    
+
     private void addFront(Node n) {
         // BUG 2: must call remove(n) first for existing nodes
         n.next = head.next;
@@ -1362,14 +687,14 @@ public:
         head.next.prev = n;
         head.next = n;
     }
-    
+
     public int get(int key) {
         if (!map.containsKey(key)) return -1;
         Node n = map.get(key);
         remove(n); addFront(n);
         return n.val;
     }
-    
+
     public void put(int key, int value) {
         if (map.containsKey(key)) {
             Node n = map.get(key);
@@ -1387,16 +712,8 @@ public:
         }
     }
 }`,
-      c: `typedef struct Node {
-    int key, val;
-    struct Node *prev, *next;
-} Node;
-
-typedef struct {
-    int capacity, size;
-    Node *head, *tail;
-    // (simplified: no hashmap in C demo — using linear scan)
-} LRUCache;
+    c: `typedef struct Node { int key, val; struct Node *prev, *next; } Node;
+typedef struct { int capacity, size; Node *head, *tail; } LRUCache;
 
 LRUCache* lRUCacheCreate(int capacity) {
     LRUCache* c = malloc(sizeof(LRUCache));
@@ -1407,41 +724,16 @@ LRUCache* lRUCacheCreate(int capacity) {
     return c;
 }
 
-void removeNode(Node* n) {
-    n->prev->next = n->next;
-    n->next->prev = n->prev;
-}
+void removeNode(Node* n) { n->prev->next=n->next; n->next->prev=n->prev; }
 
 void addFront(LRUCache* c, Node* n) {
-    /* BUG 2: should removeNode(n) first for existing nodes */
-    n->next = c->head->next;
-    n->prev = c->head;
-    c->head->next->prev = n;
-    c->head->next = n;
-}
-
-int lRUCacheGet(LRUCache* c, int key) {
-    Node* cur = c->head->next;
-    while (cur != c->tail) {
-        if (cur->key == key) {
-            removeNode(cur); addFront(c, cur);
-            return cur->val;
-        }
-        cur = cur->next;
-    }
-    return -1;
+    /* BUG 2: removeNode(n) must be called first for existing nodes */
+    n->next=c->head->next; n->prev=c->head;
+    c->head->next->prev=n; c->head->next=n;
 }
 
 void lRUCachePut(LRUCache* c, int key, int value) {
-    Node* cur = c->head->next;
-    while (cur != c->tail) {
-        if (cur->key == key) {
-            cur->val = value;
-            removeNode(cur); addFront(c, cur);
-            return;
-        }
-        cur = cur->next;
-    }
+    /* search existing ... (omitted for brevity) */
     Node* n = malloc(sizeof(Node));
     n->key=key; n->val=value;
     addFront(c, n);
@@ -1453,45 +745,59 @@ void lRUCachePut(LRUCache* c, int key, int value) {
         c->size--;
     }
 }`
-    },
-    testCode: {
-      javascript: `
-class LRUCacheRef {
-  constructor(cap){this.cap=cap;this.map=new Map();this.h={};this.t={};this.h.next=this.t;this.t.prev=this.h;}
-  _rm(n){n.prev.next=n.next;n.next.prev=n.prev;}
-  _af(n){n.next=this.h.next;n.prev=this.h;this.h.next.prev=n;this.h.next=n;}
-  get(k){if(!this.map.has(k))return -1;const n=this.map.get(k);this._rm(n);this._af(n);return n.v;}
-  put(k,v){if(this.map.has(k)){const n=this.map.get(k);n.v=v;this._rm(n);this._af(n);}else{const n={k,v};this.map.set(k,n);this._af(n);if(this.map.size>this.cap){const l=this.t.prev;this._rm(l);this.map.delete(l.k);}}}
-}
-let p=0,f=0;
+  },
+  testCode: {
+    javascript: `
+let p=0, f=0;
 function run(cap, ops) {
-  const c=new LRUCacheRef(cap);
-  return ops.map(([op,...a])=>op==='put'?(c.put(a[0],a[1]),null):c.get(a[0]));
+  const c = new LRUCache(cap);
+  return ops.map(([op, ...a]) => op === 'put' ? (c.put(a[0], a[1]), null) : c.get(a[0]));
 }
-// Test 1
-const r1=run(2,[['put',1,1],['put',2,2],['get',1],['put',3,3],['get',2],['get',1],['get',3]]);
-const e1=[null,null,1,null,-1,1,3];
-if(JSON.stringify(r1)===JSON.stringify(e1))p++;else{f++;console.log('❌ Test 1: got '+JSON.stringify(r1)+' expected '+JSON.stringify(e1));}
-// Test 2
-const r2=run(2,[['put',1,1],['put',2,2],['put',3,3],['get',1]]);
-const e2=[null,null,null,-1];
-if(JSON.stringify(r2)===JSON.stringify(e2))p++;else{f++;console.log('❌ Test 2: got '+JSON.stringify(r2)+' expected '+JSON.stringify(e2));}
-// Test 3
-const r3=run(1,[['put',2,1],['get',2],['put',3,2],['get',2],['get',3]]);
-const e3=[null,1,null,-1,2];
-if(JSON.stringify(r3)===JSON.stringify(e3))p++;else{f++;console.log('❌ Test 3: got '+JSON.stringify(r3)+' expected '+JSON.stringify(e3));}
-if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`
-    },
-    testCases: [
-      { label:'Test 1', input:['cap=2,ops=standard'],  expected:'[_,_,1,_,-1,1,3]',  wrongOutput:'wrong' },
-      { label:'Test 2', input:['cap=2,evict first'],    expected:'[_,_,_,-1]',         wrongOutput:'wrong' },
-      { label:'Test 3', input:['cap=1,single slot'],    expected:'[_,1,_,-1,2]',       wrongOutput:'wrong' },
-    ],
-    validator: `
+const r1 = run(2, [['put',1,1],['put',2,2],['get',1],['put',3,3],['get',2],['get',1],['get',3]]);
+const e1 = [null,null,1,null,-1,1,3];
+if (JSON.stringify(r1)===JSON.stringify(e1)) p++; else { f++; console.log('❌ Test 1: got '+JSON.stringify(r1)+' expected '+JSON.stringify(e1)); }
+const r2 = run(2, [['put',1,1],['put',2,2],['put',3,3],['get',1]]);
+const e2 = [null,null,null,-1];
+if (JSON.stringify(r2)===JSON.stringify(e2)) p++; else { f++; console.log('❌ Test 2: got '+JSON.stringify(r2)+' expected '+JSON.stringify(e2)); }
+const r3 = run(1, [['put',2,1],['get',2],['put',3,2],['get',2],['get',3]]);
+const e3 = [null,1,null,-1,2];
+if (JSON.stringify(r3)===JSON.stringify(e3)) p++; else { f++; console.log('❌ Test 3: got '+JSON.stringify(r3)+' expected '+JSON.stringify(e3)); }
+if (f===0) console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
+else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
+    python: `
+def run_tests():
+    def run(cap, ops):
+        c = LRUCache(cap)
+        out = []
+        for op, *args in ops:
+            if op == 'put': c.put(args[0], args[1]); out.append(None)
+            else: out.append(c.get(args[0]))
+        return out
+    cases = [
+        (2, [('put',1,1),('put',2,2),('get',1),('put',3,3),('get',2),('get',1),('get',3)], [None,None,1,None,-1,1,3], 'Test 1'),
+        (2, [('put',1,1),('put',2,2),('put',3,3),('get',1)], [None,None,None,-1], 'Test 2'),
+        (1, [('put',2,1),('get',2),('put',3,2),('get',2),('get',3)], [None,1,None,-1,2], 'Test 3'),
+    ]
+    passed = 0; failed = 0
+    for cap, ops, expected, label in cases:
+        try:
+            result = run(cap, ops)
+            if result == expected: passed += 1
+            else: failed += 1; print(f"❌ {label}: got {result}, expected {expected}")
+        except Exception as e: failed += 1; print(f"💥 {label}: {e}")
+    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
+    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
+run_tests()`
+  },
+  testCases: [
+    { label: 'Test 1', input: ['cap=2, standard ops'],  expected: '[_,_,1,_,-1,1,3]',  wrongOutput: 'wrong values' },
+    { label: 'Test 2', input: ['cap=2, evict first'],    expected: '[_,_,_,-1]',         wrongOutput: 'wrong values' },
+    { label: 'Test 3', input: ['cap=1, single slot'],    expected: '[_,1,_,-1,2]',       wrongOutput: 'wrong values' },
+  ],
+  validator: `
 class LRUCacheRef{constructor(cap){this.cap=cap;this.map=new Map();this.h={};this.t={};this.h.next=this.t;this.t.prev=this.h;}_rm(n){n.prev.next=n.next;n.next.prev=n.prev;}_af(n){n.next=this.h.next;n.prev=this.h;this.h.next.prev=n;this.h.next=n;}get(k){if(!this.map.has(k))return -1;const n=this.map.get(k);this._rm(n);this._af(n);return n.v;}put(k,v){if(this.map.has(k)){const n=this.map.get(k);n.v=v;this._rm(n);this._af(n);}else{const n={k,v};this.map.set(k,n);this._af(n);if(this.map.size>this.cap){const l=this.t.prev;this._rm(l);this.map.delete(l.k);}}}}
 function run(cap,ops){const c=new LRUCacheRef(cap);return ops.map(([op,...a])=>op==='put'?(c.put(a[0],a[1]),null):c.get(a[0]));}`,
-    validatorRunner: `
+  validatorRunner: `
 let p=0,f=0;
 const r1=run(2,[['put',1,1],['put',2,2],['get',1],['put',3,3],['get',2],['get',1],['get',3]]);const e1=[null,null,1,null,-1,1,3];
 if(JSON.stringify(r1)===JSON.stringify(e1))p++;else{f++;console.log('❌ Test 1: '+JSON.stringify(r1)+' vs '+JSON.stringify(e1));}
@@ -1501,240 +807,257 @@ const r3=run(1,[['put',2,1],['get',2],['put',3,2],['get',2],['get',3]]);const e3
 if(JSON.stringify(r3)===JSON.stringify(e3))p++;else{f++;console.log('❌ Test 3: '+JSON.stringify(r3)+' vs '+JSON.stringify(e3));}
 if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
 else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
-    fixChecks: {
-      python: [
-        { pattern: /if\s+len\s*\(\s*self\s*\.\s*cache\s*\)\s*>\s*self\s*\.\s*capacity\s*[^+]/, description: 'Fix BUG 1: evict when len(cache) > self.capacity (not +1)' },
-        { pattern: /self\s*\.\s*_remove\s*\(\s*node\s*\)/, description: 'Fix BUG 2: call self._remove(node) before _add_to_front' },
-        { pattern: /del\s+self\s*\.\s*cache\s*\[\s*lru\s*\.\s*key\s*\]/, description: 'Fix BUG 3: del self.cache[lru.key] after eviction' },
-      ],
-      cpp: [
-        { pattern: /\(\s*int\s*\)\s*dll\s*\.\s*size\s*\(\s*\)\s*>\s*cap\s*[^+]/, description: 'Fix BUG 1: evict when size > cap (not cap+1)' },
-        { pattern: /mp\s*\.\s*erase\s*\(/, description: 'Fix BUG 2 & 3: mp.erase(lru.first) before dll.pop_back()' },
-      ],
-      java: [
-        { pattern: /map\s*\.\s*size\s*\(\s*\)\s*>\s*capacity\s*[^+]/, description: 'Fix BUG 1: evict when map.size() > capacity (not +1)' },
-        { pattern: /remove\s*\(\s*n\s*\)/, description: 'Fix BUG 2: call remove(n) before addFront in get/put' },
-        { pattern: /map\s*\.\s*remove\s*\(\s*lru\s*\.\s*key\s*\)/, description: 'Fix BUG 3: map.remove(lru.key) after eviction' },
-      ],
-      c: [
-        { pattern: /c\s*->\s*size\s*>\s*c\s*->\s*capacity\s*[^+]/, description: 'Fix BUG 1: evict when size > capacity (not +1)' },
-        { pattern: /removeNode\s*\(\s*cur\s*\)/, description: 'Fix BUG 2: removeNode before addFront for existing nodes' },
-        { pattern: /free\s*\(\s*lru\s*\)/, description: 'Fix BUG 3: free(lru) to prevent memory leak' },
-      ],
-    },
-    solvedBy: false
+  fixChecks: {
+    javascript: [
+      { pattern: /this\.map\.size\s*>\s*this\.capacity(?!\s*\+)/, description: 'Fix BUG 1: evict when map.size > this.capacity (remove the + 1)' },
+      { pattern: (c) => { const m = c.match(/_addToFront[^{]*{([^}]*)/); return m && /this._remove/.test(m[1]); }, description: 'Fix BUG 2: call this._remove(node) inside _addToFront before relinking' },
+      { pattern: /this\.map\.delete\s*\(\s*lru\.key\s*\)/, description: 'Fix BUG 3: this.map.delete(lru.key) after eviction' },
+    ],
+    python: [
+      { pattern: /len\s*\(\s*self\.cache\s*\)\s*>\s*self\.capacity(?!\s*\+)/, description: 'Fix BUG 1: evict when len(cache) > self.capacity (remove + 1)' },
+      { pattern: (c) => { const m = c.match(/_add_to_front[^:]*:([^d]*)/); return m && /self._remove/.test(m[1]); }, description: 'Fix BUG 2: call self._remove(node) inside _add_to_front' },
+      { pattern: /del\s+self\.cache\s*\[\s*lru\.key\s*\]/, description: 'Fix BUG 3: del self.cache[lru.key] after eviction' },
+    ],
+    cpp: [
+      { pattern: /\(\s*int\s*\)\s*dll\.size\s*\(\s*\)\s*>\s*cap(?!\s*\+)/, description: 'Fix BUG 1: evict when dll.size() > cap (remove + 1)' },
+      { pattern: /mp\.erase\s*\(/, description: 'Fix BUG 3: mp.erase(lru.first) before dll.pop_back()' },
+    ],
+    java: [
+      { pattern: /map\.size\s*\(\s*\)\s*>\s*capacity(?!\s*\+)/, description: 'Fix BUG 1: evict when map.size() > capacity (remove + 1)' },
+      { pattern: /remove\s*\(\s*n\s*\)/, description: 'Fix BUG 2: call remove(n) before addFront in get/put' },
+      { pattern: /map\.remove\s*\(\s*lru\.key\s*\)/, description: 'Fix BUG 3: map.remove(lru.key) after eviction' },
+    ],
+    c: [
+      { pattern: /c->size\s*>\s*c->capacity(?!\s*\+)/, description: 'Fix BUG 1: evict when size > capacity (remove + 1)' },
+      { pattern: /removeNode\s*\(\s*n\s*\)/, description: 'Fix BUG 2: removeNode(n) before addFront for existing nodes' },
+      { pattern: /free\s*\(\s*lru\s*\)/, description: 'Fix BUG 3: free(lru) to avoid memory leak' },
+    ],
   },
+  solvedBy: false
+},
 
-  // ═══════════════════════════════════════════
-  // Q8 — MEDIAN DATA STREAM ATTACK (INSANE)
-  // ═══════════════════════════════════════════
-  {
-    id: 8,
-    title: "Median Data Stream Attack",
-    difficulty: "INSANE",
-    points: 500,
-    category: "Heaps",
-    description: "⚠ MAXIMUM THREAT LEVEL. The real-time threat scoring system uses a dual-heap median tracker to compute live threat medians from a data stream. A state-sponsored actor planted two bugs: the heap balancing condition is inverted (maxHeap and minHeap swap sizes incorrectly) and the median formula for even-count is wrong (uses wrong heap). The threat scores are completely fabricated. Every decision is wrong. Fix both bugs or the entire grid goes dark.",
-    constraints: ["−10⁵ ≤ num ≤ 10⁵", "At least one element before getMedian", "Up to 5×10⁴ addNum calls"],
-    examples: [
-      { input: "addNum(1), addNum(2), getMedian()", output: "1.5" },
-      { input: "addNum(3), getMedian()",             output: "2.0" },
-      { input: "addNum(1), addNum(1), getMedian()",  output: "1.0" }
-    ],
-    hints: [
-      "maxHeap stores the smaller half — it should always be equal to or 1 larger than minHeap",
-      "The rebalance condition is inverted: it rebalances when it should not and vice versa",
-      "For even count, median = (maxHeap.top + minHeap.top) / 2 — check which heap is which"
-    ],
-    buggyCode: {
-      javascript: `class MedianFinder {
+// ═══════════════════════════════════════════
+// Q8 — MEDIAN DATA STREAM ATTACK (INSANE)
+// ═══════════════════════════════════════════
+{
+  id: 8,
+  title: "Median Data Stream Attack",
+  difficulty: "INSANE",
+  points: 500,
+  category: "Heaps",
+  description: "⚠ MAXIMUM THREAT LEVEL. The real-time threat scoring system uses a dual-heap median tracker. A state-sponsored actor planted two bugs: the heap rebalance condition is inverted (it rebalances when sizes are already correct and skips it when they're not), and the even-count median formula reads from the wrong heap (returns garbage). The threat scores are completely fabricated. Fix both bugs or the entire grid goes dark.",
+  constraints: [
+    "−10⁵ ≤ num ≤ 10⁵",
+    "At least one element before getMedian",
+    "Up to 5×10⁴ addNum calls"
+  ],
+  examples: [
+    { input: "addNum(1), addNum(2), getMedian()", output: "1.5" },
+    { input: "addNum(3), getMedian()",             output: "2.0" },
+    { input: "addNum(1), addNum(1), getMedian()",  output: "1.0" }
+  ],
+  hints: [
+    "BUG 1: The rebalance fires when minHeap.size() > maxHeap.size() — but maxHeap should always be the larger one. Flip the condition to maxHeap.size() > minHeap.size() + 1",
+    "BUG 2: Even-count median negates the wrong heap — it should be (-maxHeap.peek() + minHeap.peek()) / 2, not the other way around"
+  ],
+  buggyCode: {
+    javascript: `class MedianFinder {
   constructor() {
-    // maxHeap: stores lower half (simulated with negation)
-    // minHeap: stores upper half
-    this.maxHeap = new MinHeap(); // actually used as max via negation
-    this.minHeap = new MinHeap();
+    this.maxHeap = new MinHeap(); // lower half — stored negated
+    this.minHeap = new MinHeap(); // upper half
   }
-  
+
   addNum(num) {
-    this.maxHeap.push(-num); // negate for max behavior
-    
-    // Balance: maxHeap should have equal or 1 more element
-    // BUG 1: condition inverted — rebalances the wrong direction
+    this.maxHeap.push(-num);
+
+    // BUG 1: condition is inverted — fires when sizes are already balanced
     if (this.minHeap.size() > this.maxHeap.size()) {
       this.minHeap.push(-this.maxHeap.pop());
     }
-    
-    // Ensure ordering: max of lower half <= min of upper half
+
+    // maintain ordering invariant
     if (this.maxHeap.size() > 0 && this.minHeap.size() > 0 &&
         -this.maxHeap.peek() > this.minHeap.peek()) {
       this.minHeap.push(-this.maxHeap.pop());
       this.maxHeap.push(-this.minHeap.pop());
     }
   }
-  
+
   getMedian() {
     if (this.maxHeap.size() > this.minHeap.size()) {
       return -this.maxHeap.peek();
     }
-    // BUG 2: even count — should be (-maxHeap.peek() + minHeap.peek()) / 2
+    // BUG 2: wrong — negates minHeap instead of maxHeap
     return (-this.minHeap.peek() + this.maxHeap.peek()) / 2;
   }
 }
 
 class MinHeap {
-  constructor(){this.h=[];}
-  size(){return this.h.length;}
-  peek(){return this.h[0];}
-  push(v){this.h.push(v);this._up(this.h.length-1);}
-  pop(){const t=this.h[0];const l=this.h.pop();if(this.h.length){this.h[0]=l;this._down(0);}return t;}
-  _up(i){while(i>0){const p=(i-1)>>1;if(this.h[p]<=this.h[i])break;[this.h[p],this.h[i]]=[this.h[i],this.h[p]];i=p;}}
-  _down(i){const n=this.h.length;while(true){let s=i,l=2*i+1,r=2*i+2;if(l<n&&this.h[l]<this.h[s])s=l;if(r<n&&this.h[r]<this.h[s])s=r;if(s===i)break;[this.h[s],this.h[i]]=[this.h[i],this.h[s]];i=s;}}
+  constructor() { this.h = []; }
+  size() { return this.h.length; }
+  peek() { return this.h[0]; }
+  push(v) { this.h.push(v); this._up(this.h.length - 1); }
+  pop() { const t = this.h[0]; const l = this.h.pop(); if (this.h.length) { this.h[0] = l; this._down(0); } return t; }
+  _up(i) { while (i > 0) { const p = (i-1) >> 1; if (this.h[p] <= this.h[i]) break; [this.h[p], this.h[i]] = [this.h[i], this.h[p]]; i = p; } }
+  _down(i) { const n = this.h.length; while (true) { let s=i, l=2*i+1, r=2*i+2; if (l<n&&this.h[l]<this.h[s]) s=l; if (r<n&&this.h[r]<this.h[s]) s=r; if (s===i) break; [this.h[s],this.h[i]]=[this.h[i],this.h[s]]; i=s; } }
 }`,
-      python: `import heapq
+    python: `import heapq
 
 class MedianFinder:
     def __init__(self):
-        # max_heap: lower half (negated for max behavior)
-        # min_heap: upper half
-        self.max_heap = []  # negated values
-        self.min_heap = []
-    
+        self.max_heap = []  # lower half (negated)
+        self.min_heap = []  # upper half
+
     def add_num(self, num: int) -> None:
         heapq.heappush(self.max_heap, -num)
-        
-        # BUG 1: condition inverted — wrong rebalance direction
+
+        # BUG 1: condition inverted — should be len(max_heap) > len(min_heap) + 1
         if len(self.min_heap) > len(self.max_heap):
             heapq.heappush(self.min_heap, -heapq.heappop(self.max_heap))
-        
-        # maintain ordering
+
         if self.max_heap and self.min_heap and (-self.max_heap[0] > self.min_heap[0]):
             heapq.heappush(self.min_heap, -heapq.heappop(self.max_heap))
             heapq.heappush(self.max_heap, -heapq.heappop(self.min_heap))
-    
+
     def get_median(self) -> float:
         if len(self.max_heap) > len(self.min_heap):
             return float(-self.max_heap[0])
         # BUG 2: wrong — should be (-max_heap[0] + min_heap[0]) / 2
         return (-self.min_heap[0] + self.max_heap[0]) / 2`,
-      cpp: `class MedianFinder {
-    priority_queue<int> maxH;           // lower half
-    priority_queue<int,vector<int>,greater<int>> minH; // upper half
+    cpp: `class MedianFinder {
+    priority_queue<int> maxH;                               // lower half
+    priority_queue<int, vector<int>, greater<int>> minH;    // upper half
 public:
     void addNum(int num) {
         maxH.push(num);
-        
-        // BUG 1: inverted — should rebalance when maxH is more than 1 ahead
+
+        // BUG 1: inverted — should rebalance when maxH.size() > minH.size() + 1
         if (minH.size() > maxH.size()) {
             minH.push(maxH.top()); maxH.pop();
         }
-        
+
         if (!maxH.empty() && !minH.empty() && maxH.top() > minH.top()) {
             minH.push(maxH.top()); maxH.pop();
             maxH.push(minH.top()); minH.pop();
         }
     }
-    
+
     double findMedian() {
         if (maxH.size() > minH.size()) return maxH.top();
-        // BUG 2: wrong heaps — should be (maxH.top() + minH.top()) / 2.0
-        return (minH.top() + maxH.top()) / 2.0; // order is fine but read carefully
+        // BUG 2: for C++ both tops are correct values so the bug is subtle —
+        // ensure you are computing (maxH.top() + minH.top()) / 2.0 with correct types
+        return (minH.top() + maxH.top()) / 2; // BUG: integer division, missing .0
     }
 };`,
-      java: `class MedianFinder {
-    PriorityQueue<Integer> maxH = new PriorityQueue<>(Collections.reverseOrder());
-    PriorityQueue<Integer> minH = new PriorityQueue<>();
-    
+    java: `class MedianFinder {
+    PriorityQueue<Integer> maxH = new PriorityQueue<>(Collections.reverseOrder()); // lower half
+    PriorityQueue<Integer> minH = new PriorityQueue<>();                            // upper half
+
     public void addNum(int num) {
         maxH.offer(num);
-        
-        // BUG 1: condition inverted — rebalances the wrong way
+
+        // BUG 1: condition inverted — should be maxH.size() > minH.size() + 1
         if (minH.size() > maxH.size()) {
             minH.offer(maxH.poll());
         }
-        
+
         if (!maxH.isEmpty() && !minH.isEmpty() && maxH.peek() > minH.peek()) {
             minH.offer(maxH.poll());
             maxH.offer(minH.poll());
         }
     }
-    
+
     public double findMedian() {
         if (maxH.size() > minH.size()) return maxH.peek();
-        // BUG 2: wrong — should be (maxH.peek() + minH.peek()) / 2.0
-        return (minH.peek() + maxH.peek()) / 2.0;
+        // BUG 2: integer division — should cast: (maxH.peek() + (double)minH.peek()) / 2
+        return (maxH.peek() + minH.peek()) / 2; // integer division truncates
     }
 }`,
-      c: `/* C implementation using sorted insert simulation */
-#define MAXN 100005
+    c: `#define MAXN 100005
 int data[MAXN];
 int dataSize = 0;
 
 void addNum(int num) {
-    /* Insert in sorted position */
     int i = dataSize - 1;
-    while (i >= 0 && data[i] > num) {
-        data[i+1] = data[i];
-        i--;
-    }
+    while (i >= 0 && data[i] > num) { data[i+1] = data[i]; i--; }
     data[i+1] = num;
     dataSize++;
 }
 
 double findMedian() {
-    if (dataSize % 2 == 1) {
-        return (double)data[dataSize / 2];
-    }
-    /* BUG: integer division truncates — should cast before dividing */
-    return (data[dataSize/2 - 1] + data[dataSize/2]) / 2; /* BUG: integer division */
+    if (dataSize % 2 == 1) return (double)data[dataSize / 2];
+    // BUG 1 & 2: integer division truncates the average
+    return (data[dataSize/2 - 1] + data[dataSize/2]) / 2; // should cast to double
 }`
-    },
-    testCode: {
-      javascript: `
-class MFRef {
-  constructor(){this.lo=[];this.hi=[];}
-  _pushMax(v){this.lo.push(v);this.lo.sort((a,b)=>b-a);}
-  _pushMin(v){this.hi.push(v);this.hi.sort((a,b)=>a-b);}
-  addNum(n){
-    this._pushMax(n);
-    if(this.hi.length&&this.lo[0]>this.hi[0]){this._pushMin(this.lo.shift());this.lo.sort((a,b)=>b-a);}
-    if(this.lo.length>this.hi.length+1){this._pushMin(this.lo.shift());}
-    else if(this.hi.length>this.lo.length){this._pushMax(this.hi.shift());}
-  }
-  getMedian(){if(this.lo.length>this.hi.length)return this.lo[0];return(this.lo[0]+this.hi[0])/2;}
-}
-let p=0,f=0;
-function close(a,b){return Math.abs(a-b)<0.001;}
-const m1=new MFRef();
-m1.addNum(1);m1.addNum(2);
-if(close(m1.getMedian(),1.5))p++;else{f++;console.log('❌ Test 1: got '+m1.getMedian()+' expected 1.5');}
+  },
+  testCode: {
+    javascript: `
+let p=0, f=0;
+function close(a, b) { return Math.abs(a - b) < 0.001; }
+const m1 = new MedianFinder();
+m1.addNum(1); m1.addNum(2);
+if (close(m1.getMedian(), 1.5)) p++; else { f++; console.log('❌ Test 1: got ' + m1.getMedian() + ' expected 1.5'); }
 m1.addNum(3);
-if(close(m1.getMedian(),2.0))p++;else{f++;console.log('❌ Test 2: got '+m1.getMedian()+' expected 2.0');}
-const m2=new MFRef();
-m2.addNum(1);m2.addNum(1);
-if(close(m2.getMedian(),1.0))p++;else{f++;console.log('❌ Test 3: got '+m2.getMedian()+' expected 1.0');}
-const m3=new MFRef();
-[6,1,4,2,7,3,5].forEach(x=>m3.addNum(x));
-if(close(m3.getMedian(),4.0))p++;else{f++;console.log('❌ Test 4: got '+m3.getMedian()+' expected 4.0');}
-const m4=new MFRef();
-[5,3].forEach(x=>m4.addNum(x));
-if(close(m4.getMedian(),4.0))p++;else{f++;console.log('❌ Test 5: got '+m4.getMedian()+' expected 4.0');}
-if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
-else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`
-    },
-    testCases: [
-      { label:'Test 1', input:['addNum(1,2) → getMedian'],   expected:'1.5',  wrongOutput:'wrong' },
-      { label:'Test 2', input:['addNum(3) → getMedian'],      expected:'2.0',  wrongOutput:'wrong' },
-      { label:'Test 3', input:['addNum(1,1) → getMedian'],    expected:'1.0',  wrongOutput:'wrong' },
-      { label:'Test 4', input:['stream [6,1,4,2,7,3,5]'],     expected:'4.0',  wrongOutput:'wrong' },
-      { label:'Test 5', input:['addNum(5,3) → getMedian'],    expected:'4.0',  wrongOutput:'wrong' },
-    ],
-    validator: `
+if (close(m1.getMedian(), 2.0)) p++; else { f++; console.log('❌ Test 2: got ' + m1.getMedian() + ' expected 2.0'); }
+const m2 = new MedianFinder();
+m2.addNum(1); m2.addNum(1);
+if (close(m2.getMedian(), 1.0)) p++; else { f++; console.log('❌ Test 3: got ' + m2.getMedian() + ' expected 1.0'); }
+const m3 = new MedianFinder();
+[6,1,4,2,7,3,5].forEach(x => m3.addNum(x));
+if (close(m3.getMedian(), 4.0)) p++; else { f++; console.log('❌ Test 4: got ' + m3.getMedian() + ' expected 4.0'); }
+const m4 = new MedianFinder();
+[5,3].forEach(x => m4.addNum(x));
+if (close(m4.getMedian(), 4.0)) p++; else { f++; console.log('❌ Test 5: got ' + m4.getMedian() + ' expected 4.0'); }
+if (f === 0) console.log('ALL_PASS:' + p + '/' + p + ' test cases passed');
+else console.log('PARTIAL:' + p + '/' + (p+f) + ' test cases passed');`,
+    python: `
+def run_tests():
+    import heapq
+    def close(a, b): return abs(a - b) < 0.001
+    passed = 0; failed = 0
+
+    m1 = MedianFinder()
+    m1.add_num(1); m1.add_num(2)
+    r = m1.get_median()
+    if close(r, 1.5): passed += 1
+    else: failed += 1; print(f"❌ Test 1: got {r}, expected 1.5")
+
+    m1.add_num(3); r = m1.get_median()
+    if close(r, 2.0): passed += 1
+    else: failed += 1; print(f"❌ Test 2: got {r}, expected 2.0")
+
+    m2 = MedianFinder(); m2.add_num(1); m2.add_num(1); r = m2.get_median()
+    if close(r, 1.0): passed += 1
+    else: failed += 1; print(f"❌ Test 3: got {r}, expected 1.0")
+
+    m3 = MedianFinder()
+    for x in [6,1,4,2,7,3,5]: m3.add_num(x)
+    r = m3.get_median()
+    if close(r, 4.0): passed += 1
+    else: failed += 1; print(f"❌ Test 4: got {r}, expected 4.0")
+
+    m4 = MedianFinder(); m4.add_num(5); m4.add_num(3); r = m4.get_median()
+    if close(r, 4.0): passed += 1
+    else: failed += 1; print(f"❌ Test 5: got {r}, expected 4.0")
+
+    if failed == 0: print(f"ALL_PASS:{passed}/{passed} test cases passed")
+    else: print(f"PARTIAL:{passed}/{passed+failed} test cases passed")
+run_tests()`
+  },
+  testCases: [
+    { label: 'Test 1', input: ['addNum(1,2) → getMedian'],   expected: '1.5',  wrongOutput: 'wrong' },
+    { label: 'Test 2', input: ['addNum(3) → getMedian'],      expected: '2.0',  wrongOutput: 'wrong' },
+    { label: 'Test 3', input: ['addNum(1,1) → getMedian'],    expected: '1.0',  wrongOutput: 'wrong' },
+    { label: 'Test 4', input: ['stream [6,1,4,2,7,3,5]'],     expected: '4.0',  wrongOutput: 'wrong' },
+    { label: 'Test 5', input: ['addNum(5,3) → getMedian'],    expected: '4.0',  wrongOutput: 'wrong' },
+  ],
+  validator: `
 class MFRef{constructor(){this.lo=[];this.hi=[];}
 _pm(v){this.lo.push(v);this.lo.sort((a,b)=>b-a);}
 _pn(v){this.hi.push(v);this.hi.sort((a,b)=>a-b);}
 addNum(n){this._pm(n);if(this.hi.length&&this.lo[0]>this.hi[0]){this._pn(this.lo.shift());}if(this.lo.length>this.hi.length+1){this._pn(this.lo.shift());}else if(this.hi.length>this.lo.length){this._pm(this.hi.shift());}}
 getMedian(){if(this.lo.length>this.hi.length)return this.lo[0];return(this.lo[0]+this.hi[0])/2;}}`,
-    validatorRunner: `
+  validatorRunner: `
 function close(a,b){return Math.abs(a-b)<0.001;}
 let p=0,f=0;
 const m1=new MFRef();m1.addNum(1);m1.addNum(2);
@@ -1749,29 +1072,32 @@ const m4=new MFRef();[5,3].forEach(x=>m4.addNum(x));
 if(close(m4.getMedian(),4.0))p++;else{f++;console.log('❌ Test 5: got '+m4.getMedian()+' exp 4.0');}
 if(f===0)console.log('ALL_PASS:'+p+'/'+p+' test cases passed');
 else console.log('PARTIAL:'+p+'/'+(p+f)+' test cases passed');`,
-    fixChecks: {
-      python: [
-        { pattern: /len\s*\(\s*self\s*\.\s*max_heap\s*\)\s*>\s*len\s*\(\s*self\s*\.\s*min_heap\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when len(max_heap) > len(min_heap) + 1' },
-        { pattern: /return\s*\(\s*-\s*self\s*\.\s*max_heap\s*\[\s*0\s*\]\s*\+\s*self\s*\.\s*min_heap\s*\[\s*0\s*\]\s*\)\s*\/\s*2/, description: 'Fix BUG 2: return (-max_heap[0] + min_heap[0]) / 2' },
-      ],
-      cpp: [
-        { pattern: /maxH\s*\.\s*size\s*\(\s*\)\s*>\s*minH\s*\.\s*size\s*\(\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when maxH.size() > minH.size() + 1' },
-        { pattern: /\(\s*maxH\s*\.\s*top\s*\(\s*\)\s*\+\s*minH\s*\.\s*top\s*\(\s*\)\s*\)\s*\/\s*2\.0/, description: 'Fix BUG 2: (maxH.top() + minH.top()) / 2.0' },
-      ],
-      java: [
-        { pattern: /maxH\s*\.\s*size\s*\(\s*\)\s*>\s*minH\s*\.\s*size\s*\(\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when maxH.size() > minH.size() + 1' },
-        { pattern: /\(\s*maxH\s*\.\s*peek\s*\(\s*\)\s*\+\s*minH\s*\.\s*peek\s*\(\s*\)\s*\)\s*\/\s*2\.0/, description: 'Fix BUG 2: (maxH.peek() + minH.peek()) / 2.0' },
-      ],
-      c: [
-        { pattern: /\(\s*double\s*\)\s*\(\s*data\s*\[/, description: 'Fix BUG 1 & 2: cast to double before division for correct median' },
-      ],
-    },
-    solvedBy: false
-  }
+  fixChecks: {
+    javascript: [
+      { pattern: /this\.maxHeap\.size\s*\(\s*\)\s*>\s*this\.minHeap\.size\s*\(\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when maxHeap.size() > minHeap.size() + 1' },
+      { pattern: /return\s*\(\s*-\s*this\.maxHeap\.peek\s*\(\s*\)\s*\+\s*this\.minHeap\.peek\s*\(\s*\)\s*\)\s*\/\s*2/, description: 'Fix BUG 2: return (-maxHeap.peek() + minHeap.peek()) / 2' },
+    ],
+    python: [
+      { pattern: /len\s*\(\s*self\.max_heap\s*\)\s*>\s*len\s*\(\s*self\.min_heap\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when len(max_heap) > len(min_heap) + 1' },
+      { pattern: /return\s*\(\s*-\s*self\.max_heap\s*\[\s*0\s*\]\s*\+\s*self\.min_heap\s*\[\s*0\s*\]\s*\)\s*\/\s*2/, description: 'Fix BUG 2: return (-max_heap[0] + min_heap[0]) / 2' },
+    ],
+    cpp: [
+      { pattern: /maxH\.size\s*\(\s*\)\s*>\s*minH\.size\s*\(\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when maxH.size() > minH.size() + 1' },
+      { pattern: /\(\s*maxH\.top\s*\(\s*\)\s*\+\s*minH\.top\s*\(\s*\)\s*\)\s*\/\s*2\.0/, description: 'Fix BUG 2: (maxH.top() + minH.top()) / 2.0 with float division' },
+    ],
+    java: [
+      { pattern: /maxH\.size\s*\(\s*\)\s*>\s*minH\.size\s*\(\s*\)\s*\+\s*1/, description: 'Fix BUG 1: rebalance when maxH.size() > minH.size() + 1' },
+      { pattern: /\(\s*maxH\.peek\s*\(\s*\)\s*\+\s*\(?\s*double\s*\)?\s*minH\.peek\s*\(\s*\)\s*\)\s*\/\s*2/, description: 'Fix BUG 2: cast to double for correct division' },
+    ],
+    c: [
+      { pattern: /\(\s*double\s*\)\s*\(\s*data\s*\[/, description: 'Fix BUG: cast sum to double before dividing for correct median' },
+    ],
+  },
+  solvedBy: false
+}
 ];
-
-const TOTAL_TIME = 45 * 60; // 45 minutes for 8 questions
-const STORAGE_KEY = 'debug_terminal_v3';
+const TOTAL_TIME = 20 * 60; // 45 minutes for 8 questions
+const STORAGE_KEY = 'debug_terminal_v4';
 
 // ===== EXECUTION ENGINE — SOLUTION COMPARISON (100% offline) =====
 //
@@ -2533,8 +1859,8 @@ function App() {
           setTimeLeft(Math.max(0, TOTAL_TIME - elapsed));
           startTimeRef.current = data.startTime;
           if (data.score) setScore(data.score);
-          if (data.solved) setSolvedSet(new Set(data.solved));
-          if (data.currentQ !== undefined) setCurrentQ(data.currentQ);
+          if (data.solved) { const validSolved = data.solved.filter(i => Number.isInteger(i) && i >= 0 && i < QUESTIONS.length); setSolvedSet(new Set(validSolved)); }
+          if (data.currentQ !== undefined && data.currentQ < QUESTIONS.length) setCurrentQ(data.currentQ);
         } else {
           localStorage.removeItem(STORAGE_KEY);
         }
